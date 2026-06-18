@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>¡Feliz Cumpleaños Elen!</title>
+    <!-- Fuentes elegantes -->
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght=700&family=Poppins:wght=400;600;800&display=swap" rel="stylesheet">
+    <!-- Three.js para el motor 3D -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <style>
+        :root {
+            --space-bg: linear-gradient(to bottom, #0b0b1e, #18183a);
+            --heart-color: #ff4d6d;
+            --pink-neon: #ff85a2;
+            --yellow-neon: #ffb703;
+            --celeste-neon: #00e5ff;
+            --celeste-claro: #e0f7fa;
+        }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #050510;
+            color: #fff;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        /* ESCENARIO PRINCIPAL */
+        .escenario {
+            position: absolute;
+            width: 100vw;
+            height: 100vh;
+            background: var(--space-bg);
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+        /* CANVAS DE ESTRELLAS FIJAS PARA EL INICIO */
+        #canvas-estrellas-inicio {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            pointer-events: none;
+            transition: opacity 0.8s ease;
+        }
+        .cartoon-star {
+            position: absolute;
+            font-size: 2.8rem;
+            line-height: 1;
+            user-select: none;
+            filter: drop-shadow(0 0 10px rgba(255, 223, 0, 0.8));
+            animation: float 3s ease-in-out infinite alternate;
+            z-index: 3;
+            pointer-events: none;
+        }
+        .pink-heart-img { 
+            position: absolute; width: 75px; height: 75px; 
+            filter: drop-shadow(0 0 15px var(--pink-neon)); 
+            animation: float 3s ease-in-out infinite; z-index: 3;
+            pointer-events: none;
+        }
+        /* --- PANTALLA DE INICIO --- */
+        #intro-screen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+        .banner-top-container {
+            position: absolute;
+            top: 15%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+        }
+        .big-banner-top {
+            font-size: 4.5rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 5px;
+            color: #fff;
+            text-shadow: 0 0 20px var(--heart-color), 0 0 40px var(--pink-neon);
+            text-align: center;
+            animation: pulse 1.5s infinite alternate;
+        }
+        .lirio-img {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 50%;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
+            animation: float 3s ease-in-out infinite alternate;
+        }
+        .luna-top-left, .sol-bottom-right {
+            position: absolute;
+            font-size: 11rem; 
+            line-height: 1;
+            user-select: none;
+            z-index: 11;
+        }
+        .luna-top-left {
+            left: 4%; top: 5%;
+            filter: drop-shadow(0 0 30px rgba(255, 255, 255, 0.5));
+            animation: float 4.5s ease-in-out infinite;
+        }
+        .sol-bottom-right {
+            right: 4%; bottom: 5%;
+            filter: drop-shadow(0 0 35px rgba(255, 183, 3, 0.6));
+            animation: float 5s ease-in-out infinite 1s;
+        }
+        .banner-bottom-wrapper {
+            position: absolute;
+            bottom: 12%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            width: 90%;
+        }
+        .big-banner-bottom {
+            font-family: 'Dancing Script', cursive;
+            font-size: 3.8rem;
+            color: #ffe5ec;
+            text-shadow: 0 0 20px var(--pink-neon);
+            text-align: center;
+            white-space: nowrap;
+        }
+        .main-heart-btn {
+            font-size: 10rem; cursor: pointer;
+            filter: drop-shadow(0 0 40px var(--heart-color));
+            animation: heartbeat 1.2s infinite;
+            transition: transform 0.3s ease;
+            user-select: none; z-index: 15;
+        }
+        .main-heart-btn:hover { transform: scale(1.15); }
+        .click-hint {
+            font-size: 1.1rem; text-transform: uppercase; letter-spacing: 3px;
+            color: #ffccd5; margin-top: 15px; text-shadow: 0 0 8px var(--heart-color);
+            z-index: 15;
+        }
+        /* --- PANTALLA DE CONTRASEÑA --- */
+        #password-screen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: none;
+            opacity: 0;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+            background: rgba(8, 8, 25, 0.95);
+            transition: opacity 0.8s ease;
+        }
+        .password-card {
+            background: rgba(22, 15, 45, 0.9);
+            border: 2px solid var(--pink-neon);
+            box-shadow: 0 0 30px rgba(255, 133, 162, 0.6);
+            border-radius: 25px;
+            padding: 40px 30px;
+            width: 90%;
+            max-width: 480px;
+            text-align: center;
+            backdrop-filter: blur(8px);
+            animation: simple-pulse 2s infinite alternate;
+        }
+        .password-card h2 {
+            font-family: 'Dancing Script', cursive;
+            font-size: 2.2rem;
+            color: #fff;
+            margin-bottom: 25px;
+            text-shadow: 0 0 10px var(--pink-neon);
+            line-height: 1.3;
+        }
+        .password-input {
+            width: 100%;
+            padding: 14px 20px;
+            border-radius: 30px;
+            border: 2px solid var(--celeste-neon);
+            background: rgba(10, 10, 30, 0.8);
+            color: var(--pink-neon) !important; 
+            caret-color: var(--pink-neon);
+            font-size: 1.1rem;
+            font-family: 'Poppins', sans-serif;
+            text-align: center;
+            outline: none;
+            margin-bottom: 20px;
+            box-shadow: 0 0 10px rgba(0, 229, 255, 0.2);
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .password-input:focus {
+            border-color: var(--pink-neon);
+            box-shadow: 0 0 18px var(--pink-neon);
+        }
+        .submit-btn {
+            background: linear-gradient(45deg, var(--heart-color), var(--pink-neon));
+            color: #fff;
+            border: none;
+            padding: 12px 35px;
+            border-radius: 30px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(255, 77, 109, 0.4);
+            transition: transform 0.2s, box-shadow 0.3s;
+        }
+        .submit-btn:hover {
+            transform: scale(1.06);
+            box-shadow: 0 0 25px var(--pink-neon);
+        }
+        .error-msg {
+            color: #ff4d6d;
+            font-size: 0.9rem;
+            margin-top: 12px;
+            font-weight: 600;
+            display: none;
+            text-shadow: 0 0 5px rgba(0,0,0,0.5);
+        }
+        /* --- PANTALLA 2: UNIVERSO INTERACTIVO 3D --- */
+        #universe-screen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: none;
+            opacity: 0;
+            transition: opacity 1s ease;
+            z-index: 5;
+            touch-action: none;
+        }
+        #canvas-container {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 5;
+        }
+        .ui-overlay-3d {
+            position: absolute;
+            top: 4%;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 8;
+            pointer-events: none;
+            width: 100%;
+            text-align: center;
+        }
+        .age-banner {
+            font-family: 'Dancing Script', cursive;
+            font-size: 4rem;
+            color: var(--celeste-claro);
+            text-shadow: 0 0 10px #fff, 0 0 20px var(--celeste-neon), 0 0 40px var(--celeste-neon);
+            animation: simple-pulse 1.5s infinite alternate;
+            user-select: none;
+        }
+        /* --- CARTAS / PLANETAS --- */
+        .notebook-planet-3d {
+            position: absolute;
+            background: rgba(11, 11, 30, 0.9);
+            backdrop-filter: blur(6px);
+            padding: 8px 14px;
+            border-radius: 20px;
+            border: 2px solid var(--pink-neon);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 0 15px rgba(255, 133, 162, 0.4);
+            transition: background 0.2s, box-shadow 0.2s, border-color 0.2s, opacity 0.3s;
+            user-select: none;
+            z-index: 7;
+            transform: translate(-50%, -50%);
+            white-space: nowrap;
+        }
+        .planet-sphere-icon {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            box-shadow: 0 0 10px currentColor;
+            display: inline-block;
+        }
+        .notebook-planet-3d:hover {
+            background: rgba(255, 77, 109, 0.4);
+            border-color: var(--celeste-neon);
+            box-shadow: 0 0 20px var(--celeste-neon);
+        }
+        /* --- LIBRETA ESTILO LIBRO REAL --- */
+        .notebook-book {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%; max-width: 460px; height: 520px;
+            perspective: 2000px;
+            display: none; z-index: 100;
+        }
+        .book-cover {
+            position: absolute; width: 100%; height: 100%;
+            transform-origin: left center; transform-style: preserve-3d;
+            transition: transform 1.2s cubic-bezier(0.4, 0, 0.2, 1); z-index: 5;
+        }
+        .notebook-book.active .book-cover { transform: rotateY(-145deg); }
+        .cover-front {
+            position: absolute; width: 100%; height: 100%;
+            background: #bd1f3c; color: #fff; border-radius: 0 15px 15px 0;
+            box-shadow: 10px 10px 30px rgba(0,0,0,0.5); backface-visibility: hidden;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            padding: 30px; border-left: 12px solid #8a1125;
+        }
+        #cover-emoji { font-size: 5.5rem; margin-bottom: 25px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3)); }
+        #cover-title { font-family: 'Dancing Script', cursive; font-size: 2.5rem; text-align: center; }
+        .cover-back {
+            position: absolute; width: 100%; height: 100%; background: #9d152c;
+            border-radius: 15px 0 0 15px; transform: rotateY(180deg); backface-visibility: hidden;
+        }
+        .book-page {
+            position: absolute; width: 100%; height: 100%; background: #fdf6e2;
+            color: #2b2d42; border-radius: 0 15px 15px 0; padding: 45px 35px;
+            box-shadow: 5px 5px 20px rgba(0,0,0,0.3);
+            background-image: linear-gradient(#e1d7be 1px, transparent 1px); background-size: 100% 30px;
+            z-index: 1; opacity: 0; transition: opacity 0.6s ease;
+        }
+        .notebook-book.active .book-page { opacity: 1; transition-delay: 0.7s; }
+        .notebook-content {
+            font-family: 'Dancing Script', cursive; font-size: 1.9rem; line-height: 30px;
+            padding-top: 10px; height: 100%; overflow-y: auto;
+        }
+        .notebook-content h2 { font-size: 2.6rem; color: #bd1f3c; margin-bottom: 20px; text-align: center; }
+        .close-btn { position: absolute; top: 15px; right: 20px; font-size: 1.5rem; cursor: pointer; color: #8d99ae; z-index: 10; }
+        .close-btn:hover { color: #bd1f3c; }
+        #overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 99; display: none; }
+        
+        /* --- RESPONSIVO --- */
+        @media (max-width: 768px) {
+            .banner-top-container { top: 16%; gap: 10px; }
+            .big-banner-top { font-size: 2.4rem; }
+            .lirio-img { width: 50px; height: 50px; }
+            .big-banner-bottom { font-size: 1.6rem; }
+            .luna-top-left, .sol-bottom-right { font-size: 5.5rem; }
+            .main-heart-btn { font-size: 7rem; }
+            .age-banner { font-size: 2.8rem; }
+            .notebook-planet-3d { padding: 6px 10px; font-size: 0.8rem; }
+            .notebook-book { width: 85%; height: 440px; }
+            .notebook-content { font-size: 1.45rem; line-height: 26px; }
+            #cover-title { font-size: 1.9rem; }
+            #cover-emoji { font-size: 4rem; }
+            .password-card h2 { font-size: 1.8rem; }
+        }
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            30% { transform: scale(1.08); }
+            60% { transform: scale(1.03); }
+            80% { transform: scale(1.12); }
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+        @keyframes pulse {
+            0% { opacity: 0.6; transform: scale(0.96); }
+            100% { opacity: 1; transform: scale(1.04); }
+        }
+        @keyframes simple-pulse {
+            0% { transform: scale(0.97); }
+            100% { transform: scale(1.03); }
+        }
+
+        /* --- TRANSICIÓN CHICAS SUPERPODEROSAS --- */
+        #ppg-transition {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: 9999;
+            display: none;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        .ppg-svg {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 15vw;
+            min-width: 100px;
+            transform: translate(-50%, -50%) scale(0);
+            transform-origin: center;
+            animation: ppgScale 1.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+        @keyframes ppgScale {
+            0% { transform: translate(-50%, -50%) scale(0); }
+            100% { transform: translate(-50%, -50%) scale(50); }
+        }
+@media (max-width: 768px) {
+    
+    /* 1. Corrección para la carpeta/modal del cuaderno */
+    #notebook-modal {
+        position: fixed !important;
+        
+        /* En lugar de ocupar el 100%, dejamos un margen (92%) y lo centramos.
+           Esto evita de golpe que choque con las barras del navegador móvil */
+        width: 92% !important;
+        max-height: 80vh !important; /* Limita la altura al 80% de la pantalla */
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        border-radius: 16px !important; /* Bordes redondeados más estéticos */
+        
+        /* ACTIVAR SCROLL: Permite desplazarse hacia abajo con el dedo si el texto es largo */
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch; /* Desplazamiento fluido en iOS/iPhone */
+        
+        /* Espacio interno: 70px arriba para alejar el contenido de la 'X' */
+        padding: 70px 20px 20px 20px !important;
+        box-sizing: border-box !important;
+    }
+
+    /* 2. Corrección para el botón de cerrar (la X) */
+    /* NOTA: He incluido las clases más comunes (.close-btn, .close). 
+       Asegúrate de que coincida con la clase o ID que tenga tu botón en el HTML */
+    .close-btn, .close, #close-modal, .modal-close {
+        position: absolute !important;
+        top: 15px !important;  /* Lo baja lo suficiente para que no se mezcle con la barra de Google */
+        right: 15px !important;
+        
+        /* Tamaño ideal para que sea fácil de presionar con el dedo (Área de toque) */
+        width: 44px !important;
+        height: 44px !important;
+        font-size: 30px !important;
+        
+        /* Centramos la X perfectamente dentro de su propio botón */
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        
+        /* Añadimos un fondo tenue circular para que resalte del fondo y se vea claramente */
+        background-color: rgba(0, 0, 0, 0.1) !important;
+        border-radius: 50% !important;
+        cursor: pointer !important;
+        z-index: 1010 !important;
+    }
+}
+    </style>
+</head>
+<body>
+    <!-- AUDIO DE FONDO -->
+    <audio id="bg-music" src="Musica.mp3.mpeg" loop></audio>
+    <!-- ESCENARIO -->
+    <div class="escenario">
+        <!-- CANVAS PARA LAS ESTRELLAS FIJAS PARPADEANTES DE LA PANTALLA DE INICIO -->
+        <canvas id="canvas-estrellas-inicio"></canvas>
+    </div>
+    <!-- PANTAL LA 1: INICIO -->
+    <div id="intro-screen">
+        <div class="banner-top-container">
+            <div class="big-banner-top">¡FELICIDADES!</div>
+            <img class="lirio-img" src="https://th.bing.com/th/id/R.cb70cbd746950c3b217394821139359d?rik=axxIXN0py57wCA&pid=ImgRaw&r=0" alt="Lirio">
+        </div>
+        
+        <div class="luna-top-left">🌕</div>
+        <div class="sol-bottom-right">☀️</div>
+        <div class="cartoon-star" style="top: 12%; right: 15%;">✨</div>
+        <div class="cartoon-star" style="top: 40%; left: 5%;">✨</div>
+        <div class="cartoon-star" style="bottom: 15%; left: 12%;">✨</div>
+        <img class="pink-heart-img" style="top:38%; left:22%;" src="https://png.pngtree.com/png-clipart/20220622/original/pngtree-bright-pink-hearts-cartoon-illustration-png-image_8179112.png" alt="Corazón">
+        <img class="pink-heart-img" style="top:32%; right:24%;" src="https://png.pngtree.com/png-clipart/20220622/original/pngtree-bright-pink-hearts-cartoon-illustration-png-image_8179112.png" alt="Corazón">
+        <div class="main-heart-btn" onclick="solicitarContrasena()">❤️</div>
+        <div class="click-hint">Toca el corazón</div>
+        <div class="banner-bottom-wrapper">
+            <div class="big-banner-bottom">Te quiero muchooooo Elennnnnn 🩷</div>
+        </div>
+    </div>
+    <!-- PANTALLA DE CONTRASEÑA -->
+    <div id="password-screen">
+        <div class="password-card">
+            <h2>¿Adivina quién está cumpliendo años? 🩷🩷🩷</h2>
+            <input type="text" id="password-input" class="password-input" placeholder="Escribe el nombre completo..." onkeydown="if(event.key === 'Enter') validarClave()">
+            <button class="submit-btn" onclick="validarClave()">Verificar ✨</button>
+            <div id="error-message" class="error-msg">¡Ups! Ese no es el nombre, inténtalo de nuevo 💖</div>
+        </div>
+    </div>
+
+    <!-- PANTALLA DE TRANSICIÓN CHICAS SUPERPODEROSAS -->
+    <div id="ppg-transition">
+        <svg class="ppg-svg" viewBox="0 0 100 100" fill="#ff85a2" style="animation-delay: 0s"><path d="M50 85C50 85 10 55 10 30C10 15 25 10 35 15C42 18.5 50 28 50 28C50 28 58 18.5 65 15C75 10 90 15 90 30C90 55 50 85 50 85Z"/></svg>
+        <svg class="ppg-svg" viewBox="0 0 100 100" fill="#ff4d6d" style="animation-delay: 0.25s"><path d="M50 85C50 85 10 55 10 30C10 15 25 10 35 15C42 18.5 50 28 50 28C50 28 58 18.5 65 15C75 10 90 15 90 30C90 55 50 85 50 85Z"/></svg>
+        <svg class="ppg-svg" viewBox="0 0 100 100" fill="#ffffff" style="animation-delay: 0.5s"><path d="M50 85C50 85 10 55 10 30C10 15 25 10 35 15C42 18.5 50 28 50 28C50 28 58 18.5 65 15C75 10 90 15 90 30C90 55 50 85 50 85Z"/></svg>
+        <svg class="ppg-svg" viewBox="0 0 100 100" fill="#ff85a2" style="animation-delay: 0.75s"><path d="M50 85C50 85 10 55 10 30C10 15 25 10 35 15C42 18.5 50 28 50 28C50 28 58 18.5 65 15C75 10 90 15 90 30C90 55 50 85 50 85Z"/></svg>
+        <svg class="ppg-svg" viewBox="0 0 100 100" fill="#ff4d6d" style="animation-delay: 1.0s"><path d="M50 85C50 85 10 55 10 30C10 15 25 10 35 15C42 18.5 50 28 50 28C50 28 58 18.5 65 15C75 10 90 15 90 30C90 55 50 85 50 85Z"/></svg>
+        <svg class="ppg-svg" viewBox="0 0 100 100" fill="#0b0b1e" style="animation-delay: 1.25s"><path d="M50 85C50 85 10 55 10 30C10 15 25 10 35 15C42 18.5 50 28 50 28C50 28 58 18.5 65 15C75 10 90 15 90 30C90 55 50 85 50 85Z"/></svg>
+    </div>
+
+    <!-- PANTALLA 2: UNIVERSO INTERACTIVO -->
+    <div id="universe-screen">
+        <div class="ui-overlay-3d">
+            <div class="age-banner">¡Felices 17!💖 </div>
+        </div>
+        <div id="canvas-container"></div>
+        <div id="labels-container" style="position:absolute; width:100%; height:100%; top:0; left:0; pointer-events:none;"></div>
+    </div>
+    <!-- MODAL -->
+    <div id="overlay" onclick="closeNotebook()"></div>
+    <div id="notebook-modal" class="notebook-book">
+        <div class="book-cover">
+            <div class="cover-front">
+                <div id="cover-emoji">📓</div>
+                <div id="cover-title">Bitácora</div>
+            </div>
+            <div class="cover-back"></div>
+        </div>
+        <div class="book-page">
+            <div class="close-btn" onclick="closeNotebook()">❌</div>
+            <div class="notebook-content">
+                <h2 id="notebook-title">Título</h2>
+                <p id="notebook-text">Contenido...</p>
+            </div>
+        </div>
+    </div>
+    <script>
+        // --- SISTEMA DE ESTRELLAS DE INICIO (CANVAS HTML5) ---
+        const canvasInicio = document.getElementById('canvas-estrellas-inicio');
+        const ctxInicio = canvasInicio.getContext('2d');
+        let estrellasInicioArray = [];
+        function ajustarCanvasInicio() {
+            canvasInicio.width = window.innerWidth;
+            canvasInicio.height = window.innerHeight;
+        }
+        function crearEstrellasInicio() {
+            estrellasInicioArray = [];
+            // Genera 200 puntos, igual que en el fondo de Three.js
+            for (let i = 0; i < 200; i++) {
+                estrellasInicioArray.push({
+                    x: Math.random() * canvasInicio.width,
+                    y: Math.random() * canvasInicio.height,
+                    size: Math.random() * 1.5 + 0.5, // Puntos finos y elegantes
+                    fase: Math.random() * Math.PI,
+                    velocidadParpadeo: 0.02 + Math.random() * 0.05
+                });
+            }
+        }
+        function animarEstrellasInicio() {
+            ctxInicio.clearRect(0, 0, canvasInicio.width, canvasInicio.height);
+            
+            estrellasInicioArray.forEach(est => {
+                est.fase += est.velocidadParpadeo;
+                const brillo = 0.25 + Math.abs(Math.sin(est.fase)) * 0.75;
+                
+                ctxInicio.fillStyle = `rgba(255, 255, 255, ${brillo})`;
+                ctxInicio.beginPath();
+                // Dibujamos círculos estáticos en su posición x, y
+                ctxInicio.arc(est.x, est.y, est.size, 0, Math.PI * 2);
+                ctxInicio.fill();
+            });
+            if (canvasInicio.style.display !== 'none') {
+                requestAnimationFrame(animarEstrellasInicio);
+            }
+        }
+        // Inicializar estrellas fijas del inicio
+        window.addEventListener('load', () => {
+            ajustarCanvasInicio();
+            crearEstrellasInicio();
+            animarEstrellasInicio();
+        });
+        // --- CONTROLADORES DE TRANSICIÓN Y PANTALLAS ---
+        function solicitarContrasena() {
+            const intro = document.getElementById('intro-screen');
+            const pwdScreen = document.getElementById('password-screen');
+            intro.style.opacity = '0';
+            intro.style.transform = 'scale(0.8)';
+            
+            setTimeout(() => {
+                intro.style.display = 'none';
+                pwdScreen.style.display = 'flex';
+                setTimeout(() => {
+                    pwdScreen.style.opacity = '1';
+                    document.getElementById('password-input').focus();
+                }, 50);
+            }, 800);
+        }
+        function validarClave() {
+            const inputVal = document.getElementById('password-input').value;
+            const errorMsg = document.getElementById('error-message');
+            const normalizar = (text) => {
+                return text.normalize("NFD")
+                           .replace(/[\u0300-\u036f]/g, "")
+                           .toLowerCase()
+                           .trim()
+                           .replace(/\s+/g, ' ');
+            };
+            const claveCorrecta = normalizar("Elen Nicol Peñaloza Quintero");
+            const claveIngresada = normalizar(inputVal);
+            if (claveIngresada === claveCorrecta) {
+                errorMsg.style.display = 'none';
+                concederAccesoAlUniverso();
+            } else {
+                errorMsg.style.display = 'block';
+                const card = document.querySelector('.password-card');
+                card.style.animation = 'none';
+                setTimeout(() => {
+                    card.style.transform = 'translateX(0)';
+                    let pos = 0;
+                    const interval = setInterval(() => {
+                        pos = pos === 0 ? 8 : (pos > 0 ? -8 : 0);
+                        card.style.transform = `translateX(${pos}px)`;
+                        if (pos === 0) clearInterval(interval);
+                    }, 50);
+                }, 10);
+            }
+        }
+        function concederAccesoAlUniverso() {
+            const pwdScreen = document.getElementById('password-screen');
+            const universe = document.getElementById('universe-screen');
+            const ppg = document.getElementById('ppg-transition');
+            const music = document.getElementById('bg-music');
+            
+            if(music) music.play().catch(e => console.log("Permiso de reproducción:", e));
+            
+            // Ocultamos el input y el texto suavemente
+            const card = document.querySelector('.password-card');
+            if(card) {
+                card.style.transition = 'opacity 0.3s';
+                card.style.opacity = '0';
+            }
+            
+            // Empezar transición PPG
+            ppg.style.display = 'block';
+            
+            // Esperar a que el último corazón oscuro cubra toda la pantalla
+            setTimeout(() => {
+                pwdScreen.style.display = 'none';
+                canvasInicio.style.display = 'none';
+                
+                // Mostrar el universo por debajo de la capa oscura
+                universe.style.transition = 'none';
+                universe.style.display = 'block';
+                universe.style.opacity = '1';
+                initThreeDUniverse();
+                
+                // Desvanecer la pantalla oscura de transición para revelar el pastel
+                ppg.style.transition = 'opacity 1.2s ease-in-out';
+                ppg.style.opacity = '0';
+                
+                setTimeout(() => {
+                    ppg.style.display = 'none';
+                }, 1200);
+                
+            }, 2400);
+        }
+        // --- SISTEMA TEXTUAL DE LAS LIBRETAS ---
+        const mensajes = {
+            'Amor': { titulo: "¡Feliz Cumpleaños! 💖", texto: "Hoy el universo celebra tu existencia. Desde hace mucho tiempo te convertiste en mi persona favorita, no hay un día en el que no piense en ti y en cómo estás. Realmente agradezco al cielo el haber coincidido contigo y haber nacido en esta época por haberte conocido. Gracias por todo, te quiero muuchoo 💗.", color: "#ff4d6d" },
+            'Deseos': { titulo: "Mis Deseos Para Ti ✨", texto: "Desde el fondo de mi corazón, deseo que no solo durante este día especial, sino también por todos los días próximos a este, hoy, mañana, pasado, la próxima semana, el próximo año y toda la vida, quiero que sepas que siempre voy a apoyarte en todo. No dudes en venir a mí, todas las cosas hermosas que te lleguen a pasar tienes que saber que mereces cada una de ellas, eres toda una hermosura 💋.", color: "#ffb703" },
+            'Aventuras': { titulo: "Nuestras Aventuras 🌌", texto: "Cada momento contigo se ha convertido en algo inolvidable que toca mi corazón y me transmite muchos sentimientos que no quiero dejar de sentir. Espero y todos los años que vienen nos permitan seguir creando muchos recuerdos inolvidables y muchas risas que nos mantengan unidos 💋👻.", color: "#00e5ff" },
+            'Destino': { titulo: "En las Estrellas 🌙", texto: "El sol, la luna y las estrellas se alinearon perfectamente hace 17 años para el nacimiento de una estrella tan linda y brillante como tú. No digas que no tienes esperanza en tu futuro, no vas a ser una decepción. Tú tienes un futuro brillante como ningún otro, confío plenamente en ti, sé que lo vas a lograr, aunque a veces digas q no jsjsjs, sé lo mucho q te esfuerzas en todo 😼.", color: "#ccff33" },
+            'Momentos': { titulo: "Instantes Bellos 📸", texto: "Desde que te conocí, siempre he tenido muy buenos momentos que puedo decir con confianza que me han hecho sentir emociones que no creí llegar a sentir por una persona. Tú eres toda una caja de sorpresas, nunca dejas de sorprenderme, cada plática contigo se siente como si el tiempo se detuviera, no quiero que se acabe nunca jsjsjs.", color: "#ff85a2" },
+            'Futuro': { titulo: "Lo Que Nos Espera 🚀", texto: "No sé exactamente qué nos espera a futuro, pero, desde que te conocí, no he pensado un futuro en el que tú no estés. No quiero que sean palabras vacías, por eso yo siempre voy a estar de tu lado, no importa lo que pase, tqm 💗", color: "#9b5de5" }
+        };
+        // --- ENTORNO THREE.JS CON PASTEL ---
+        let scene, camera, renderer, universeGroup, cakeGroup, starsGroup, hearts3DGroup;
+        let flamasArray = [];
+        let estrellasArray = [];
+        let corazonesArray = [];
+        let isDragging = false;
+        let previousMousePosition = { x: 0, y: 0 };
+        const planetData = [];
+        function initThreeDUniverse() {
+            const container = document.getElementById('canvas-container');
+            scene = new THREE.Scene();
+            
+            camera = new THREE.PerspectiveCamera(65, container.clientWidth / container.clientHeight, 0.1, 1000);
+            camera.position.set(0, 16, 52); 
+            camera.lookAt(0, 1, 0);
+            renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            container.appendChild(renderer.domElement);
+            scene.add(new THREE.AmbientLight(0xffffff, 0.65));
+            const dirLight = new THREE.DirectionalLight(0xffe5ec, 1.4);
+            dirLight.position.set(12, 22, 12);
+            scene.add(dirLight);
+            
+            const glowLight = new THREE.PointLight(0xff85a2, 1.5, 25);
+            glowLight.position.set(0, 4, 0);
+            scene.add(glowLight);
+            universeGroup = new THREE.Group();
+            scene.add(universeGroup);
+            // Estrellas en el entorno 3D
+            starsGroup = new THREE.Group();
+            universeGroup.add(starsGroup);
+            const matEstrella3D = new THREE.MeshBasicMaterial({ color: 0xffffff });
+            for(let i=0; i<200; i++) {
+                const tamano = Math.random() * 0.08 + 0.03;
+                const geoEstrella = new THREE.SphereGeometry(tamano, 4, 4);
+                const estrellaMesh = new THREE.Mesh(geoEstrella, matEstrella3D);
+                
+                const radioEstelar = 30 + Math.random() * 40;
+                const u = Math.random();
+                const v = Math.random();
+                const theta = u * 2.0 * Math.PI;
+                const phi = Math.acos(2.0 * v - 1.0);
+                
+                estrellaMesh.position.x = radioEstelar * Math.sin(phi) * Math.cos(theta);
+                estrellaMesh.position.y = radioEstelar * Math.sin(phi) * Math.sin(theta);
+                estrellaMesh.position.z = radioEstelar * Math.cos(phi);
+                
+                estrellaMesh.userData = {
+                    velocidadParpadeo: 0.02 + Math.random() * 0.05,
+                    fase: Math.random() * Math.PI
+                };
+                starsGroup.add(estrellaMesh);
+                estrellasArray.push(estrellaMesh);
+            }
+            // Corazones flotantes 3D
+            hearts3DGroup = new THREE.Group();
+            universeGroup.add(hearts3DGroup);
+            
+            const formaCorazon = new THREE.Shape();
+            formaCorazon.moveTo(0, 0);
+            formaCorazon.bezierCurveTo(0, 0.5, 0.5, 1, 1, 1);
+            formaCorazon.bezierCurveTo(1.8, 1, 2, 0.2, 2, -0.2);
+            formaCorazon.bezierCurveTo(2, -1, 1.2, -1.7, 0, -2.5);
+            formaCorazon.bezierCurveTo(-1.2, -1.7, -2, -1, -2, -0.2);
+            formaCorazon.bezierCurveTo(-2, 0.2, -1.8, 1, -1, 1);
+            formaCorazon.bezierCurveTo(-0.5, 1, 0, 0.5, 0, 0);
+            const opcionesExtrude = { depth: 0.3, bevelEnabled: true, bevelSegments: 3, steps: 1, bevelSize: 0.15, bevelThickness: 0.15 };
+            const geoCorazon3D = new THREE.ExtrudeGeometry(formaCorazon, opcionesExtrude);
+            geoCorazon3D.center(); 
+            geoCorazon3D.rotateZ(Math.PI);
+            geoCorazon3D.scale(0.4, 0.4, 0.4);
+            const matCorazon3D = new THREE.MeshStandardMaterial({ 
+                color: 0xff4d6d, 
+                roughness: 0.3, 
+                metalness: 0.1,
+                emissive: 0x3a000d
+            });
+            for(let i=0; i<15; i++) {
+                const corazon = new THREE.Mesh(geoCorazon3D, matCorazon3D);
+                corazon.position.set(
+                    (Math.random() - 0.5) * 45,
+                    (Math.random() - 0.5) * 25 + 2,
+                    (Math.random() - 0.5) * 40
+                );
+                corazon.rotation.set(Math.random()*Math.PI, Math.random()*Math.PI, 0);
+                
+                corazon.userData = {
+                    velocidadY: 0.01 + Math.random() * 0.02,
+                    offsetFlote: Math.random() * 100,
+                    velocidadRotacion: (Math.random() - 0.5) * 0.01
+                };
+                hearts3DGroup.add(corazon);
+                corazonesArray.push(corazon);
+            }
+            // Modelado del pastel
+            cakeGroup = new THREE.Group();
+            cakeGroup.position.set(0, -3.5, 0);
+            universeGroup.add(cakeGroup);
+            const matPlato = new THREE.MeshStandardMaterial({ color: 0x1d1d35, roughness: 0.3, metalness: 0.8 });
+            const matCremaInferior = new THREE.MeshStandardMaterial({ color: 0xfff5f8, roughness: 0.5 });
+            const matCremaSuperior = new THREE.MeshStandardMaterial({ color: 0xffb7d2, roughness: 0.4 });
+            const matGlaseadoDrip = new THREE.MeshStandardMaterial({ color: 0xff4d6d, roughness: 0.2, metalness: 0.1 });
+            const matCoposChantilly = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.6 });
+            const matVelaBase = new THREE.MeshStandardMaterial({ color: 0x00e5ff, roughness: 0.3 });
+            const matVelaRaya = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 });
+            const matFlama = new THREE.MeshBasicMaterial({ color: 0xffb703 });
+            const matOroTopper = new THREE.MeshStandardMaterial({ color: 0xffd700, metalness: 0.9, roughness: 0.1, emissive: 0x221a00 });
+            const plato = new THREE.Mesh(new THREE.CylinderGeometry(7.8, 8.2, 0.4, 32), matPlato);
+            cakeGroup.add(plato);
+            const piso1 = new THREE.Mesh(new THREE.CylinderGeometry(6.6, 6.6, 4, 40), matCremaInferior);
+            piso1.position.y = 2.2;
+            cakeGroup.add(piso1);
+            for (let i = 0; i < 28; i++) {
+                const ang = (i / 28) * Math.PI * 2;
+                const copo = new THREE.Mesh(new THREE.SphereGeometry(0.35, 12, 12), matCoposChantilly);
+                copo.position.set(6.6 * Math.cos(ang), 0.3, 6.6 * Math.sin(ang));
+                cakeGroup.add(copo);
+            }
+            const piso2 = new THREE.Mesh(new THREE.CylinderGeometry(4.6, 4.6, 3.2, 36), matCremaSuperior);
+            piso2.position.y = 5.8;
+            cakeGroup.add(piso2);
+            const dripAnillo = new THREE.Mesh(new THREE.CylinderGeometry(4.75, 4.75, 0.6, 36), matGlaseadoDrip);
+            dripAnillo.position.y = 7.2;
+            cakeGroup.add(dripAnillo);
+            for(let i=0; i<16; i++) {
+                const ang = (i / 16) * Math.PI * 2;
+                const largoGota = 0.5 + Math.random() * 0.7;
+                const gota = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.05, largoGota, 8), matGlaseadoDrip);
+                gota.position.set(4.72 * Math.cos(ang), 7.2 - (largoGota/2), 4.72 * Math.sin(ang));
+                cakeGroup.add(gota);
+            }
+            for(let i=0; i<20; i++) {
+                const ang = (i / 20) * Math.PI * 2;
+                const perla = new THREE.Mesh(new THREE.SphereGeometry(0.15, 10, 10), matOroTopper);
+                perla.position.set(6.62 * Math.cos(ang), 2.2, 6.62 * Math.sin(ang));
+                cakeGroup.add(perla);
+            }
+            const coloresChispas = [0xffb703, 0x00e5ff, 0xff85a2, 0xffffff, 0x9b5de5];
+            for (let i = 0; i < 70; i++) {
+                const matChispa = new THREE.MeshStandardMaterial({ color: coloresChispas[i % coloresChispas.length], roughness: 0.4 });
+                const chispa = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.35, 8), matChispa);
+                const enPiso1 = Math.random() > 0.4;
+                const r = enPiso1 ? 6.65 : 4.65;
+                const h = enPiso1 ? (0.6 + Math.random() * 3.2) : (4.4 + Math.random() * 2.4);
+                const ang = Math.random() * Math.PI * 2;
+                chispa.position.set(r * Math.cos(ang), h, r * Math.sin(ang));
+                chispa.rotation.set(Math.random()*Math.PI, Math.random()*Math.PI, 0);
+                cakeGroup.add(chispa);
+            }
+            for (let i = 0; i < 18; i++) {
+                const ang = (i / 18) * Math.PI * 2;
+                const copo = new THREE.Mesh(new THREE.SphereGeometry(0.28, 12, 12), matCoposChantilly);
+                copo.position.set(4.4 * Math.cos(ang), 7.4, 4.4 * Math.sin(ang));
+                cakeGroup.add(copo);
+            }
+            const posicionesVelas = [{x: -1.2, z: 1.2}, {x: 1.2, z: -1.2}, {x: 1.2, z: 1.2}, {x: -1.2, z: -1.2}];
+            posicionesVelas.forEach((pos) => {
+                const velagroup = new THREE.Group();
+                velagroup.position.set(pos.x, 7.4, pos.z);
+                const cuerpo = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 1.4, 12), matVelaBase);
+                cuerpo.position.y = 0.7;
+                velagroup.add(cuerpo);
+                for(let j=0; j<3; j++) {
+                    const raya = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.15, 12), matVelaRaya);
+                    raya.position.y = 0.25 + (j * 0.35);
+                    velagroup.add(raya);
+                }
+                const geoFlama = new THREE.SphereGeometry(0.22, 14, 14);
+                geoFlama.scale(1, 1.9, 1);
+                const flama = new THREE.Mesh(geoFlama, matFlama);
+                flama.position.y = 1.6;
+                velagroup.add(flama);
+                flamasArray.push(flama);
+                cakeGroup.add(velagroup);
+            });
+            // Topper "17"
+            const topperGroup = new THREE.Group();
+            topperGroup.position.set(0, 7.4, 0);
+            const base1 = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 2.2, 12), matOroTopper);
+            base1.position.set(-0.7, 1.1, 0);
+            topperGroup.add(base1);
+            const gancho1 = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.7, 12), matOroTopper);
+            gancho1.position.set(-0.95, 2.0, 0);
+            gancho1.rotation.z = Math.PI / 4;
+            topperGroup.add(gancho1);
+            const barraSuperior7 = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 1.4, 12), matOroTopper);
+            barraSuperior7.position.set(0.7, 2.0, 0);
+            barraSuperior7.rotation.z = Math.PI / 2;
+            topperGroup.add(barraSuperior7);
+            const diagonal7 = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 2.3, 12), matOroTopper);
+            diagonal7.position.set(0.5, 1.0, 0);
+            diagonal7.rotation.z = -Math.PI / 7;
+            topperGroup.add(diagonal7);
+            const soporteTopper = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.5, 8), matPlato);
+            soporteTopper.position.set(0, 0, 0);
+            topperGroup.add(soporteTopper);
+            cakeGroup.add(topperGroup);
+            // Generación de etiquetas planetarias alejadas
+            const keys = Object.keys(mensajes);
+            const labelsContainer = document.getElementById('labels-container');
+            keys.forEach((key, index) => {
+                const angle = (index / keys.length) * Math.PI * 2;
+                const radius = 23.5; 
+                const x = radius * Math.cos(angle);
+                const y = (index % 2 === 0 ? 4 : -1); 
+                const z = radius * Math.sin(angle);
+                const dummy = new THREE.Object3D();
+                dummy.position.set(x, y, z);
+                universeGroup.add(dummy);
+                const btn = document.createElement('div');
+                btn.className = 'notebook-planet-3d';
+                btn.innerHTML = `<span class="planet-sphere-icon" style="color: ${mensajes[key].color}; background-color: ${mensajes[key].color};"></span> <span>📓</span> <strong>${key}</strong>`;
+                btn.style.pointerEvents = 'auto';
+                btn.onclick = () => openNotebook(key);
+                labelsContainer.appendChild(btn);
+                planetData.push({ element: btn, dummy: dummy });
+            });
+            // Handlers de arrastre
+            const startDrag = (cx, cy) => { isDragging = true; previousMousePosition = { x: cx, y: cy }; };
+            const moveDrag = (cx, cy) => {
+                if (!isDragging) return;
+                const dx = cx - previousMousePosition.x;
+                const dy = cy - previousMousePosition.y;
+                universeGroup.rotation.y += dx * 0.007;
+                universeGroup.rotation.x = Math.max(-0.3, Math.min(0.3, universeGroup.rotation.x + dy * 0.004));
+                previousMousePosition = { x: cx, y: cy };
+            };
+            window.addEventListener('mousedown', (e) => startDrag(e.clientX, e.clientY));
+            window.addEventListener('mousemove', (e) => moveDrag(e.clientX, e.clientY));
+            window.addEventListener('mouseup', () => isDragging = false);
+            window.addEventListener('touchstart', (e) => { if(e.touches.length===1) startDrag(e.touches[0].clientX, e.touches[0].clientY); });
+            window.addEventListener('touchmove', (e) => { if(e.touches.length===1) moveDrag(e.touches[0].clientX, e.touches[0].clientY); });
+            window.addEventListener('touchend', () => isDragging = false);
+            window.addEventListener('resize', () => {
+                ajustarCanvasInicio();
+                crearEstrellasInicio();
+                onWindowResize();
+            });
+            animate();
+        }
+        function updateLabels() {
+            const tempV3 = new THREE.Vector3();
+            planetData.forEach(planet => {
+                planet.dummy.getWorldPosition(tempV3);
+                if (tempV3.z < -2) {
+                    planet.element.style.opacity = '0.15';
+                    planet.element.style.zIndex = '4';
+                } else {
+                    planet.element.style.opacity = '1';
+                    planet.element.style.zIndex = '7';
+                }
+                tempV3.project(camera);
+                const x = (tempV3.x * .5 + .5) * window.innerWidth;
+                const y = (tempV3.y * -.5 + .5) * window.innerHeight;
+                planet.element.style.left = `${x}px`;
+                planet.element.style.top = `${y}px`;
+                const scale = 1 - (tempV3.z * 0.22);
+                planet.element.style.transform = `translate(-50%, -50%) scale(${Math.max(0.72, Math.min(scale, 1.08))})`;
+            });
+        }
+        function animate() {
+            requestAnimationFrame(animate);
+            const time = Date.now();
+            if (!isDragging && universeGroup) {
+                universeGroup.rotation.y += 0.0022;
+            }
+            if (cakeGroup) {
+                cakeGroup.position.y = -3.5 + Math.sin(time * 0.0016) * 0.28;
+                cakeGroup.rotation.y += 0.0012;
+            }
+            flamasArray.forEach((flama, i) => {
+                const s = 1 + Math.sin(time * 0.024 + i) * 0.12;
+                flama.scale.set(s, s * 1.9, s);
+            });
+            estrellasArray.forEach((estrella) => {
+                estrella.userData.fase += estrella.userData.velocidadParpadeo;
+                const brillo = 0.35 + Math.abs(Math.sin(estrella.userData.fase)) * 0.65;
+                estrella.material.opacity = brillo;
+            });
+            corazonesArray.forEach((corazon) => {
+                corazon.position.y += Math.sin(time * 0.0012 + corazon.userData.offsetFlote) * 0.009;
+                corazon.rotation.y += corazon.userData.velocidadRotacion;
+                corazon.rotation.x += 0.0025;
+                
+                if(corazon.position.y > 18) corazon.position.y = -10;
+                if(corazon.position.y < -12) corazon.position.y = 10;
+            });
+            renderer.render(scene, camera);
+            updateLabels();
+        }
+        function onWindowResize() {
+            const container = document.getElementById('canvas-container');
+            if(!container || !camera || !renderer) return;
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        }
+        function openNotebook(key) {
+            const modal = document.getElementById('notebook-modal');
+            const overlay = document.getElementById('overlay');
+            document.getElementById('notebook-title').innerText = mensajes[key].titulo;
+            document.getElementById('notebook-text').innerText = mensajes[key].texto;
+            document.getElementById('cover-title').innerText = "Libreta: " + key;
+            modal.style.display = 'block';
+            overlay.style.display = 'block';
+            setTimeout(() => { modal.classList.add('active'); }, 30);
+        }
+        function closeNotebook() {
+            const modal = document.getElementById('notebook-modal');
+            const overlay = document.getElementById('overlay');
+            modal.classList.remove('active');
+            overlay.style.display = 'none';
+            setTimeout(() => { modal.style.display = 'none'; }, 1200);
+        }
+    </script>
+</body>
+</html>
